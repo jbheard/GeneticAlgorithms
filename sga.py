@@ -52,17 +52,26 @@ def statistics(self):
 #  DeJong's Sphere Objective function
 # x => list of decoded values
 def dejong(x):
-	pass
+    sum = 0
+    for i in x:
+        sum += i * i
+    return sum
 
 # Rosenbrock's Valley Objective function
 # x => list of decoded values
 def rosenbrock(x):
-	pass
+    sum = 0
+    for i in range(len(x) - 1):
+        y = x[i]
+        y_next = x[i + 1]
+        new = 100 * (y_next - y ** 2) ** 2 + (y - 1) ** 2
+        sum = sum + new
+    return sum
 
-# Himmelblau Objective function
-# x => list of decoded values
+# Himmelblau Objective function NOTE: Apparently this is 2D function (ie.[x,y]) instead of entire list
+# x => [x1,x2] length 2 list of decoded values
 def himmelblau(x):
-	pass
+    return (x[0] * x[0] + x[1] - 11) ** 2 + (x[0] + x[1] * x[1] - 7) ** 2
 
 if __name__ == '__main__':
 	# Input parameters to fiddle with
