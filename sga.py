@@ -15,7 +15,7 @@ from objfunc import *
 # Min and max for floating point numbers
 MINRNG, MAXRNG = -5.12, 5.12
 NUM_TERMS = 3 # How many 4 bit terms to use for decoding
-PRECISION = 2 # How many decimal places to add for floating point decoding
+PRECISION = NUM_TERMS-1 # How many decimal places to add for floating point decoding
 BCD = 4 # length of one digit in bits for BCD 
 
 # Get a True value with certain probability, otherwise False
@@ -70,7 +70,7 @@ def signed_decode(chrom):
 		num = 0
 		for j in range(i+1, i+NUM_TERMS*BCD, BCD):
 			for k in range(j, j+BCD):
-				num += 2**(k-j)
+				num += 2**(k-j) if chrom[k] else 0
 			num *= 10
 		num = num//10 # undo the extra multiply
 		if chrom[i]: num = -num # Set negative bit
@@ -84,7 +84,7 @@ def unsigned_decode(chrom):
 		num = 0
 		for j in range(i, i+NUM_TERMS*BCD, BCD):
 			for k in range(j, j+BCD):
-				num += 2**(k-j)
+				num += 2**(k-j) if chrom[k] else 0
 			num *= 10
 		num = num//10 # undo the extra multiply
 		ret.append( num ) # Add the num to the list
@@ -234,9 +234,11 @@ if __name__ == '__main__':
 	minimize  = (minimize.lower() == 'y')
 
 	lchrom = 10 # for objfuncXX, set lchrom = XX
-	sga = SGA(popsize, lchrom, pmutation, pcross, objfunc10, plus_minus_decode, minimize=minimize)
-	#sga = SGA(popsize, lchrom, pmutation, pcross, dejong, float_decode)
-	#sga = SGA(popsize, lchrom, pmutation, pcross, rosenbrock)
+	lchrom = (NUM_TERMS*BCD+1)*2
+	#sga = SGA(popsize, lchrom, pmutation, pcross, objfunc10, plus_minus_decode, minimize)
+	sga = SGA(popsize, lchrom, pmutation, pcross, himmelblau, signed_float_decode, minimize)
+	#sga = SGA(popsize, lchrom, pmutation, pcross, dejong, float_decode, minimize)
+	#sga = SGA(popsize, lchrom, pmutation, pcross, rosenbrock, minimize)
 
 	# The main body of the SGA, evolve to next generation and update statistics until max no. of generations have been parsed
 	y = []
@@ -255,3 +257,10 @@ if __name__ == '__main__':
 	plt.ylabel('Best, Avg Fitness')
 	plt.show()
 
+	#1 1000 1000 1100 = -1.13
+	chrom = [ True, 
+			True, False, False, False,
+			True, False, False, False,
+			True, True, False, False
+	]
+	print( signed_float_decode(chrom) )
