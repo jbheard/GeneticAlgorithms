@@ -127,15 +127,18 @@ class SGA:
 		return
 
 	# Select a random gene
-	# TODO: check if selection for min and max are correct
 	def select(self):
 		target = random.uniform(0, self.sumfit)
-		i = self.popsize-1 if self.minimize else 0
-		while i < self.popsize-1 and i > 0 and target > 0:
-			target -= self.pop[i].fitness
-			i += -1 if self.minimize else 1
-		return i 
-		#return random.randint(0, self.popsize-1)
+		fitness = self.sumfit # For minimizing, take complement of each gene fitness
+		i = 0
+		while i < self.popsize-1 and target > 0:
+			if self.minimize:
+				fitness -= self.pop[i].fitness
+			else:
+				fitness = self.pop[i].fitness
+			target -= fitness
+			i += 1
+		return i
 
 	# Evolve the current generation
 	def next_generation(self):
@@ -155,6 +158,7 @@ class SGA:
 			# Mutate the gene
 			self.pop[i] = mutate(self.pop[i], self.pm)
 			self.pop[i].eval_fitness(self.obj_func, self.decode_func)
+		# Sort the genes in increasing order of fitness
 		self.pop.sort(key=lambda g: g.fitness)
 	
 	# Update information on the current generation
@@ -162,9 +166,13 @@ class SGA:
 		# Find total fitness, best gene for this generation
 		self.sumfit = sum(g.fitness for g in self.pop)
 		if self.minimize: # Minimize best gene
-			best = min(self.pop, key=lambda x: x.fitness)
+			gen_best = min(self.pop, key=lambda x: x.fitness) # get best gene of generation
+			if gen_best.fitness < self.best.fitness:
+				self.best = gen_best
 		else: # Maximize best gene
-			best = max(self.pop, key=lambda x: x.fitness)
+			gen_best = max(self.pop, key=lambda x: x.fitness) # get best gene of generation
+			if gen_best.fitness > self.best.fitness:
+				self.best = gen_best
 		
 		# find average fitness
 		self.avgfit = self.sumfit / self.popsize
@@ -178,7 +186,7 @@ if __name__ == '__main__':
 	pcross    = float(input("Enter crossover probability - > "))
 	pmutation = float(input("Enter mutation probability -- > "))
 
-	sga = SGA(popsize, lchrom, pmutation, pcross, objfunc27, plus_minus_decode, minimize=True)
+	sga = SGA(popsize, lchrom, pmutation, pcross, objfunc27, plus_minus_decode, minimize=False)
 	#sga = SGA(popsize, lchrom, pmutation, pcross, dejong, float_decode)
 	#sga = SGA(popsize, lchrom, pmutation, pcross, rosenbrock)
 
