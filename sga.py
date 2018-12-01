@@ -114,7 +114,7 @@ class SGA:
 		self.minimize = minimize
 		
 		# sum and average of fitness for current population
-		self.sumfit, self.avgfit = 0, 0
+		self.sumfit = 0
 		
 		# Generate the initial population
 		self.pop = [ Genotype(lchrom) for _ in range(popsize) ]
@@ -174,37 +174,36 @@ class SGA:
 			if gen_best.fitness > self.best.fitness:
 				self.best = gen_best
 		
-		# find average fitness
-		self.avgfit = self.sumfit / self.popsize
 		return
 
 
 if __name__ == '__main__':
 	maxgen    =   int(input("Enter maximum # of generations: "))
 	popsize   =   int(input("Enter population size ------- > "))
-	lchrom    =   int(input("Enter chromosome length ----- > "))
+	#lchrom    =   int(input("Enter chromosome length ----- > "))
 	pcross    = float(input("Enter crossover probability - > "))
 	pmutation = float(input("Enter mutation probability -- > "))
+	minimize  =       input("Minimize? (Y/N) ------------- > ")
+	minimize  = (minimize.lower() == 'y')
 
-	sga = SGA(popsize, lchrom, pmutation, pcross, objfunc27, plus_minus_decode, minimize=False)
+	lchrom = 10 # for objfuncXX, set lchrom = XX
+	sga = SGA(popsize, lchrom, pmutation, pcross, objfunc10, plus_minus_decode, minimize=minimize)
 	#sga = SGA(popsize, lchrom, pmutation, pcross, dejong, float_decode)
 	#sga = SGA(popsize, lchrom, pmutation, pcross, rosenbrock)
 
 	# The main body of the SGA, evolve to next generation and update statistics until max no. of generations have been parsed
-	y = [[], []]
+	y = []
 	x = list(range(maxgen))
 	for gen in range(maxgen):
 		sga.next_generation()
 		sga.update_statistics()
 		
 		# Add best and average fitness to y vals
-		y[0].append(sga.best.fitness)
-		y[1].append(sga.avgfit)
+		y.append(sga.best.fitness)
 	
 	print("Best Gene:", str(sga.best) )
 
-	plt.plot(x, y[0], label='best')
-	plt.plot(x, y[1], label='avg')
+	plt.plot(x, y, label='best')
 	plt.xlabel('Generation #')
 	plt.ylabel('Best, Avg Fitness')
 	plt.show()
