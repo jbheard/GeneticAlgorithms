@@ -229,15 +229,19 @@ if __name__ == '__main__':
 	#lchrom    =   int(input("Enter chromosome length ----- > "))
 	pcross    = float(input("Enter crossover probability - > "))
 	pmutation = float(input("Enter mutation probability -- > "))
-	minimize  =       input("Minimize? (Y/N) ------------- > ")
-	minimize  = (minimize.lower() == 'y')
+	minimize  =       input("Minimize? (Y/N) ------------- > ") # if user answers No, maximize instead
+	minimize  = (minimize[0].lower() == 'y')
 
-	lchrom = 10 # for objfuncXX, set lchrom = XX
 	lchrom = (NUM_TERMS*BCD+1)*2
-	#sga = SGA(popsize, lchrom, pmutation, pcross, objfunc10, plus_minus_decode, minimize)
 	sga = SGA(popsize, lchrom, pmutation, pcross, himmelblau, signed_float_decode, minimize)
-	#sga = SGA(popsize, lchrom, pmutation, pcross, dejong, float_decode, minimize)
-	#sga = SGA(popsize, lchrom, pmutation, pcross, rosenbrock, minimize)
+
+	#lchrom = 10 # for objfuncXX, set lchrom = XX
+	#sga = SGA(popsize, lchrom, pmutation, pcross, objfunc10, plus_minus_decode, minimize)
+	#sga = SGA(popsize, lchrom, pmutation, pcross, objfunc27, plus_minus_decode, minimize)
+	
+	#lchrom = (NUM_TERMS*BCD+1)*X # Where X is the length of the floating point array to generate
+	#sga = SGA(popsize, lchrom, pmutation, pcross, dejong, signed_float_decode, minimize)
+	#sga = SGA(popsize, lchrom, pmutation, pcross, rosenbrock, signed_float_decode, minimize)
 
 	# The main body of the SGA, evolve to next generation and update statistics until max no. of generations have been parsed
 	y = []
