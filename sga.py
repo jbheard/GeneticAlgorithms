@@ -1,3 +1,10 @@
+'''
+TODO:
+	- test floating point encoding/decoding
+	- enforce maximum and minimum values for numerical encoding
+	- 
+'''
+
 import random
 import datetime
 import matplotlib.pyplot as plt
@@ -8,6 +15,8 @@ from objfunc import *
 # Min and max for floating point numbers
 MINRNG, MAXRNG = -5.12, 5.12
 NUM_TERMS = 3 # How many 4 bit terms to use for decoding
+PRECISION = 2 # How many decimal places to add for floating point decoding
+BCD = 4 # length of one digit in bits for BCD 
 
 # Get a True value with certain probability, otherwise False
 # 0 <= probability <= 1
@@ -40,17 +49,53 @@ class Genotype:
 
 ###################### Decoding Functions ########################
 
-# Decode a chromosome into a list of floats
-def float_decode(chrom):
-	pass
+# Decode a chromosome (in BCD format + sign bit) into signed floating point numbers with given precision
+def signed_float_decode(chrom):
+	ret = signed_decode(chrom)
+	# Get 2 decimal places (divide by 100) for each decoded signed values
+	ret = [ x/(10.0**PRECISION) for x in ret ]
+	return ret
 
-# Decode a chromosome into an unsigned integer
-def unsigned_decode(chrom):
-	pass
+# Decode a chromosome (in BCD format) into unsigned floating point numbers with given precision
+def unsigned_float_decode(chrom):
+	ret = unsigned_decode(chrom)
+	# Get 2 decimal places (divide by 100) for each decoded signed values
+	ret = [ x/(10.0**PRECISION) for x in ret ]
+	return ret
 
-# Same as unsigned decode, but with an extra sign bit at start
+# Decode a chromosome (in BCD format + sign bit) into a list of signed integers
 def signed_decode(chrom):
-	pass
+	ret = []
+	for i in range(0, len(chrom), NUM_TERMS*BCD + 1):
+		num = 0
+		for j in range(i+1, i+NUM_TERMS*BCD, BCD):
+			for k in range(j, j+BCD):
+				num += 2**(k-j)
+			num *= 10
+		num = num//10 # undo the extra multiply
+		if chrom[i]: num = -num # Set negative bit
+		ret.append( num ) # Add the num to the list
+	return ret
+
+# Decode a chromosome (in BCD format) into a list of unsigned integers
+def unsigned_decode(chrom):
+	ret = []
+	for i in range(0, len(chrom), NUM_TERMS*BCD):
+		num = 0
+		for j in range(i, i+NUM_TERMS*BCD, BCD):
+			for k in range(j, j+BCD):
+				num += 2**(k-j)
+			num *= 10
+		num = num//10 # undo the extra multiply
+		ret.append( num ) # Add the num to the list
+	return ret
+
+# Decode a chromosome into 0/1 values
+def binary_decode(chrom):
+	ret = []
+	for x in chrom:
+		ret.append(1 if x else 0)
+	return ret
 
 # Decode a chromosome into +/- 1 values
 def plus_minus_decode(chrom):
@@ -91,6 +136,8 @@ def crossover(parent1, parent2, pcross):
 	child2.set_chrom(chrom2)
 
 	return child1, child2
+
+# Select() is also technically an operator, but is included as part of the SGA class for ease
 
 ##################################################################
 
