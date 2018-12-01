@@ -1,8 +1,7 @@
 '''
 TODO:
-	- test floating point encoding/decoding
-	- enforce maximum and minimum values for numerical encoding
-	- 
+	- Enforce maximum and minimum values for numerical encoding
+	- Don't flip invalid bits for BCD format (e.g. 1001 -> 1101 is invalid, since 1101 is not BCD)
 '''
 
 import random
@@ -30,6 +29,7 @@ class Genotype:
 		self.chrom = [ flip(0.5) for _ in range(lchrom) ]
 		# Assign fitness value
 		self.fitness = fitness
+		return
 
 	# For printing out gene values
 	def __str__(self):
@@ -45,7 +45,7 @@ class Genotype:
 
 	def set_chrom(self, newchrom):
 		self.chrom = newchrom
-
+		return
 
 ###################### Decoding Functions ########################
 
@@ -207,6 +207,7 @@ class SGA:
 			self.pop[i].eval_fitness(self.obj_func, self.decode_func)
 		# Sort the genes in increasing order of fitness
 		self.pop.sort(key=lambda g: g.fitness)
+		return
 	
 	# Update information on the current generation
 	def update_statistics(self):
@@ -220,9 +221,7 @@ class SGA:
 			gen_best = max(self.pop, key=lambda x: x.fitness) # get best gene of generation
 			if gen_best.fitness > self.best.fitness:
 				self.best = gen_best
-		
 		return
-
 
 if __name__ == '__main__':
 	maxgen    =   int(input("Enter maximum # of generations: "))
@@ -256,11 +255,3 @@ if __name__ == '__main__':
 	plt.xlabel('Generation #')
 	plt.ylabel('Best, Avg Fitness')
 	plt.show()
-
-	#1 1000 1000 1100 = -1.13
-	chrom = [ True, 
-			True, False, False, False,
-			True, False, False, False,
-			True, True, False, False
-	]
-	print( signed_float_decode(chrom) )
