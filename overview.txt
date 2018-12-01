@@ -33,3 +33,16 @@ mutation : Flips a single bit in a given gene in hopes of improvement
 statistics : general and useful information about the current population of genes
 	- statistics are updated after each generation is created
 	- Updated the best gene, finds sum of all gene fitnesses, etc.
+
+
+
+VARIABLES (in our SGA implementation):
+
+maxgen  : maximum number of generations to calculate before finishing
+lchrom  : length of each chromosome, changes based on what you want to do (and the OF you are trying to optimize)
+popsize : number of genes in the population, this number stays constant throughout all generations
+pmutate : probability of mutating a gene, constant throughout the SGA, however more complicated GAs may change this values
+pcross  : probability of crossover of two genes, same as pmutate for SGA
+sumfit  : the sum of all fitness values in a given generation, useful for gene selection
+best    : the best gene so far over all population, can be minimum or maximum depending on goal
+pop     : the current population (list of genes)
