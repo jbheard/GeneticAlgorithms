@@ -2,10 +2,10 @@
 TODO:
 	- Enforce maximum and minimum values for numerical encoding
 	- Don't flip invalid bits for BCD format (e.g. 1001 -> 1101 is invalid, since 1101 is not BCD)
+	- Instead of just maxgen, add convergence check for optimal gene
 '''
 
 import random
-import datetime
 import matplotlib.pyplot as plt
 
 from copy import deepcopy
