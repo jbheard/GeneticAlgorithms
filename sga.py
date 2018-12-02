@@ -187,6 +187,21 @@ class SGA:
 			i += 1
 		return i
 
+	    # Unused currently, was testing
+       def tourn_select(self):
+           best = None
+           bestind= None
+           for i in range(0,2):
+               x=random.randint(0,self.popsize-1)
+               ind=self.pop[x]
+               if best == None:
+                   best = ind
+                   bestind= x
+               if ind.fitness > best.fitness:
+                   best=ind
+                   bestind=x
+           return bestind
+	
 	# Evolve the current generation
 	def next_generation(self):
 		for _ in range(0, self.popsize, 2): # Do this operation self.popsize/2 times
@@ -199,6 +214,13 @@ class SGA:
 			child1.eval_fitness(self.obj_func, self.decode_func)
 			child2.eval_fitness(self.obj_func, self.decode_func)
 			self.pop[gene1], self.pop[gene2] = child1, child2
+			
+			if child1.fitness > self.pop[gene1].fitness:
+				self.pop[gene1] = child1
+			if child2.fitness > self.pop[gene2].fitness:
+				self.pop[gene2] = child2
+			#print("Old{} vs New{}".format(self.pop[gene1],child1))
+			#self.pop[gene1], self.pop[gene2] = child1, child2
 		
 		# Mutate all genes with probability pm
 		for i in range(self.popsize):
