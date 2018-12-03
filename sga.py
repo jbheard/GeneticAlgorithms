@@ -66,14 +66,18 @@ class SGA:
 	obj_func - objective function to apply to chromosomes
 	minimize - if True, attempt to minimize the solution's obj_func, if False, maximize
 	'''
-	def __init__(self, popsize, lchrom, pm, pc, obj_func, generate, flip_bit, minimize=True):
+	def __init__(self, popsize, lchrom, pm, pc, obj_func, generate, flip_bit, minimize=True, cross=crossover, mutate=mutate):
 		self.pc = pc
 		self.pm = pm
 		self.lchrom = lchrom
 		self.popsize = popsize
-		self.obj_func = obj_func
 		self.flip_bit = flip_bit
 		self.minimize = minimize
+		
+		# Functions
+		self.obj_func  = obj_func
+		self.crossover = cross
+		self.mutate    = mutate
 		
 		# sum and average of fitness for current population
 		self.sumfit = 0
@@ -82,7 +86,7 @@ class SGA:
 		self.pop = [ Genotype(lchrom, generate) for _ in range(self.popsize) ]
 		for gene in self.pop:
 			gene.eval_fitness(obj_func)
-			
+		
 		# Select arbitrary best gene and update stats to start
 		self.best = self.pop[0]
 		self.update_statistics()
@@ -129,7 +133,7 @@ class SGA:
 			gene2 = self.select()
 			
 			# Cossover our two selected genes
-			child1, child2 = crossover(self.pop[gene1], self.pop[gene2], self.pc)
+			child1, child2 = self.crossover(self.pop[gene1], self.pop[gene2], self.pc)
 			
 			child1.eval_fitness(self.obj_func)
 			child2.eval_fitness(self.obj_func)
@@ -143,7 +147,7 @@ class SGA:
 		# Mutate all genes with probability pm
 		for i in range(self.popsize):
 			# Mutate the gene
-			if mutate(self.pop[i], self.pm, self.flip_bit):
+			if self.mutate(self.pop[i], self.pm, self.flip_bit):
 				self.pop[i].eval_fitness(self.obj_func)
 
 		# Sort the genes in increasing order of fitness
