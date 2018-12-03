@@ -43,7 +43,7 @@ class Genotype:
 		ret = '{:.2f} | '.format(self.fitness)
 		for x in self.chrom:
 			if type(x) is float: # Format floats to drop trailing 0s
-				ret += '{:g} '.format(x)
+				ret += '{:.2f} '.format(x)
 			else:
 				ret += '{} '.format(x)
 		return ret
@@ -130,23 +130,16 @@ class SGA:
 		newpop = []
 		for _ in range(0, self.popsize, 2): # Do this operation self.popsize/2 times
 			# Select two genes to cross
-			gene1 = self.select()
-			gene2 = self.select()
+			gene1 = self.tourn_select()
+			gene2 = self.tourn_select()
 			
 			# Cossover our two selected genes
 			child1, child2 = self.crossover(self.pop[gene1], self.pop[gene2], self.pc)
 
-#			child1.eval_fitness(self.obj_func)
-#			child2.eval_fitness(self.obj_func)
-
-			# Only take children with better fitness than parents
-#			if child1.fitness > self.pop[gene1].fitness:
-#				self.pop[gene1] = child1
-#			if child2.fitness > self.pop[gene2].fitness:
-#				self.pop[gene2] = child2
 			newpop.append(child1)
 			newpop.append(child2)
 		
+		# Maintain consistency for odd numbered populations
 		if len(newpop) < self.popsize: newpop += [ self.pop[self.select()] ]
 		self.pop = newpop
 
@@ -165,12 +158,8 @@ class SGA:
 		# Find total fitness, best gene for this generation
 		self.sumfit = sum(g.fitness for g in self.pop)
 		if self.minimize: # Minimize best gene
-			gen_best = min(self.pop, key=lambda x: x.fitness) # Get best gene of generation
-			if gen_best.fitness < self.best.fitness:
-				self.best = deepcopy(gen_best)
+			self.best = min(self.pop + [self.best], key=lambda x: x.fitness) # Get best gene of generation
 		else: # Maximize best gene
-			gen_best = max(self.pop, key=lambda x: x.fitness) # Get best gene of generation
-			if gen_best.fitness > self.best.fitness:
-				self.best = deepcopy(gen_best)
+			self.best = max(self.pop + [self.best], key=lambda x: x.fitness) # Get best gene of generation
 		return
 
