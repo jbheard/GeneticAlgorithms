@@ -102,6 +102,25 @@ class SGA:
 			i += 1
 		return i
 
+	def tourn_select(self):
+		best = None
+		bestind = None
+		for i in range(0, 2):
+			x = random.randint(0, self.popsize - 1)
+			ind = self.pop[x]
+			if best == None:
+				best = ind
+				bestind = x
+			if self.minimize:
+				if ind.fitness < best.fitness:
+					best = ind
+					bestind = x
+			else:
+				if ind.fitness > best.fitness:
+					best = ind
+					bestind = x
+		return bestind
+
 	# Evolve the current generation
 	def next_generation(self):
 		for _ in range(0, self.popsize, 2): # Do this operation self.popsize/2 times
