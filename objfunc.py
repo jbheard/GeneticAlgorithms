@@ -12,10 +12,8 @@ def nqueens(x):
 			if q1 == q2: continue
 			if q1[0] == q2[0] or q1[1] == q2[1]: 
 				collisions += 1
-				continue
 			elif abs(q1[0] - q2[0]) == abs(q1[1] - q2[1]):
 				collisions += 1
-				continue
 	return collisions
 
 #  DeJong's Sphere Objective function
