@@ -127,6 +127,7 @@ class SGA:
 
 	# Evolve the current generation
 	def next_generation(self):
+		newpop = []
 		for _ in range(0, self.popsize, 2): # Do this operation self.popsize/2 times
 			# Select two genes to cross
 			gene1 = self.select()
@@ -134,21 +135,26 @@ class SGA:
 			
 			# Cossover our two selected genes
 			child1, child2 = self.crossover(self.pop[gene1], self.pop[gene2], self.pc)
-			
-			child1.eval_fitness(self.obj_func)
-			child2.eval_fitness(self.obj_func)
+
+#			child1.eval_fitness(self.obj_func)
+#			child2.eval_fitness(self.obj_func)
 
 			# Only take children with better fitness than parents
-			if child1.fitness > self.pop[gene1].fitness:
-				self.pop[gene1] = child1
-			if child2.fitness > self.pop[gene2].fitness:
-				self.pop[gene2] = child2
+#			if child1.fitness > self.pop[gene1].fitness:
+#				self.pop[gene1] = child1
+#			if child2.fitness > self.pop[gene2].fitness:
+#				self.pop[gene2] = child2
+			newpop.append(child1)
+			newpop.append(child2)
 		
+		if len(newpop) < self.popsize: newpop += [ self.pop[self.select()] ]
+		self.pop = newpop
+
 		# Mutate all genes with probability pm
 		for i in range(self.popsize):
 			# Mutate the gene
-			if self.mutate(self.pop[i], self.pm, self.flip_bit):
-				self.pop[i].eval_fitness(self.obj_func)
+			self.mutate(self.pop[i], self.pm, self.flip_bit)
+			self.pop[i].eval_fitness(self.obj_func)
 
 		# Sort the genes in increasing order of fitness
 		self.pop.sort(key=lambda g: g.fitness)
