@@ -1,3 +1,23 @@
+# Count number of collisions for n queens
+def nqueens(x):
+	collisions = 0
+	n = int(len(x)**0.5)
+	queens = []
+	for i in range(n):
+		for j in range(n):
+			if x[i * n + j]:
+				queens.append( (i, j) )
+	for q1 in queens:
+		for q2 in queens:
+			if q1 == q2: continue
+			if q1[0] == q2[0] or q1[1] == q2[1]: 
+				collisions += 1
+				continue
+			elif abs(q1[0] - q2[0]) == abs(q1[1] - q2[1]):
+				collisions += 1
+				continue
+	return collisions
+
 #  DeJong's Sphere Objective function
 # x => list of decoded values
 def dejong(x):
