@@ -23,7 +23,7 @@ def flip_bit_bcd(x):
 	k = random.randint(-1, (NUM_DIGITS-1) * 4)
 
 	# Flip sign bit and return
-	if k < 0: return -x
+	if k < 0: return -x / (10**PRECISION)
 	else: k //= 4
 	
 	x = abs(x)
@@ -31,7 +31,7 @@ def flip_bit_bcd(x):
 	x -= digit * (10**k)        # Clear digit k
 
 	# Select only values which will result in a valid output
-	exclusions = [ j for j in range(0, 9+1) if not (MINRNG <= (x + j*(10**k))//(10**PRECISION) <= MAXRNG) ]
+	exclusions = [ j for j in range(0, 9+1) if not (MINRNG <= (x + j*(10**k))/(10**PRECISION) <= MAXRNG) ]
 
 	# Get options for flipping 1 bit based on digit
 	if   digit == 0: opts = [1, 2, 4, 8] # 0000 -> 1000, 0100, 0010, 0001
@@ -77,8 +77,8 @@ def crossover(parent1, parent2, pcross):
 		chrom1[:i], chrom2[i:] = chrom2[:i], chrom1[i:]
 
 		# Update chromosomes
-		child1.set_chrom(chrom1)
-		child2.set_chrom(chrom2)
+		#child1.set_chrom(chrom1)
+		#child2.set_chrom(chrom2)
 
 	return child1, child2
 
@@ -94,7 +94,7 @@ class Genotype:
 	def __str__(self):
 		ret = '{:.2f} | '.format(self.fitness)
 		for x in self.chrom:
-			if type(x) == float:
+			if type(x) is float: # Only print the precision we expect from float
 				ret += ('{:.' + str(PRECISION) + 'f} ').format(x)
 			else:
 				ret += '{} '.format(x)
@@ -195,6 +195,11 @@ class SGA:
 			gen_best = max(self.pop, key=lambda x: x.fitness) # Get best gene of generation
 			if gen_best.fitness > self.best.fitness:
 				self.best = deepcopy(gen_best)
+
+		if self.sumfit > 100000:
+			print("sumfit =", self.sumfit)
+			for g in self.pop: print(str(g))
+			exit(1)
 		return
 
 if __name__ == '__main__':
@@ -211,15 +216,15 @@ if __name__ == '__main__':
 	NUM_DIGITS = 3 # How many significant digits for each value
 	PRECISION = NUM_DIGITS-1 # How many decimal places for floating points (must be <= NUM_DIGITS)
 
-	lchrom = 27 # for objfuncXX, set lchrom = XX
-	objfunc = objfunc27
-	generate = lambda: random.choice( [-1, 1] ) # lambda for selecting random values
-	sga = SGA(popsize, lchrom, pmutation, pcross, objfunc, generate, lambda x: -x, minimize)
+#	lchrom = 27 # for objfuncXX, set lchrom = XX
+#	objfunc = objfunc27
+#	generate = lambda: random.choice( [-1, 1] ) # lambda for selecting random values
+#	sga = SGA(popsize, lchrom, pmutation, pcross, objfunc, generate, lambda x: -x, minimize)
 
-#	lchrom = 2
-#	objfunc = dejong
-#	generate = lambda: random.uniform( MINRNG, MAXRNG )
-#	sga = SGA(popsize, lchrom, pmutation, pcross, objfunc, generate, flip_bit_bcd, minimize)
+	lchrom = 2
+	objfunc = dejong
+	generate = lambda: random.uniform( MINRNG, MAXRNG )
+	sga = SGA(popsize, lchrom, pmutation, pcross, objfunc, generate, flip_bit_bcd, minimize)
 
 	# The main body of the SGA, evolve to next generation and update statistics until max no. of generations have been parsed
 	y = []
