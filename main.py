@@ -1,7 +1,9 @@
 import random
 import matplotlib.pyplot as plt
+from copy import deepcopy
+
 from objfunc import *
-from sga import SGA
+from sga import SGA, flip
 
 # Flip a random bit in a given chromosome
 def flip_bit_bcd(chrom):
@@ -25,7 +27,7 @@ def flip_bit_bcd(chrom):
 	x -= digit * (10**k)        # Clear digit k
 
 	# Select only values which will result in a valid output
-	exclusions = [ j for j in range(0, 9+1) if not (MINRNG <= (x + j*(10**k))/(10**PRECISION) <= MAXRNG) ]
+	exclusions = [ j for j in range(0, 9+1) if not (MINRNG <= (x + j*(10**k)) / (10**PRECISION) <= MAXRNG) ]
 
 	# Get options for flipping 1 bit based on digit
 	if   digit == 0: opts = [1, 2, 4, 8] # 0000 -> 1000, 0100, 0010, 0001
@@ -56,16 +58,26 @@ def flip_bit_plus_minus(chrom):
 	return
 	
 def flip_bit_nqueens(chrom):
-	q = [ i for i in range(len(chrom)) if chrom[i] ]
-	qnot = [ i for i in range(len(chrom)) if not chrom[i] ]
+	n = int(len(chrom)**0.5)
+	i = random.randint(0, n-1) * n
+	
+	q = [ j for j in range(i, i+n) if chrom[j] ]
+	qnot = [ j for j in range(i, i+n) if not chrom[j] ]
 	
 	i1 = random.choice(q)
 	i2 = random.choice(qnot)
 	
 	chrom[i1] = 0 # Remove queen from i1
 	chrom[i2] = 1 # Place queen at i2
-	
 	return
+
+def crossover_nqueens(p1, p2, pc):
+	c1, c2 = deepcopy(p1), deepcopy(p2)
+	if flip(pc):
+		n = int(len(c1.chrom)**0.5)
+		i = random.randint(0, n-1) * n
+		c1.chrom[:i], c2.chrom[i:] = c2.chrom[:i], c1.chrom[i:]
+	return c1, c2
 
 if __name__ == '__main__':
 	maxgen    =   int(input("Enter maximum # of generations: "))
@@ -79,7 +91,7 @@ if __name__ == '__main__':
 	MINRNG, MAXRNG = -5.00, 5.00 # Min and max for floating point numbers
 	NUM_DIGITS = 3 # How many significant digits for each value
 	PRECISION = NUM_DIGITS-1 # How many decimal places for floating points (must be <= NUM_DIGITS)
-	CONVERGENCE = 125 # If no improvement after so many generations, exit
+	CONVERGENCE = 200 # If no improvement after so many generations, exit
 
 	########################### MAIN CODE : RUN TEST CASES FROM HERE ############################
 #	lchrom = 27 # for objfuncXX, set lchrom = XX
@@ -92,10 +104,18 @@ if __name__ == '__main__':
 #	generate = lambda x: [random.uniform( MINRNG, MAXRNG ) for _ in range(x)]
 #	sga = SGA(popsize, lchrom, pmutation, pcross, objfunc, generate, flip_bit_bcd, minimize)
 
-	lchrom = 5
+	def gen_queens(n): # Function to generate n queens
+		queens = []
+		for i in range(n):
+			t = [0] * n
+			t[random.randint(0, n-1)] = 1
+			queens += t
+		return queens
+
+	lchrom = int(input("Enter # of queens: "))
 	objfunc = nqueens
-	generate = lambda x: random.sample([0] * (lchrom*lchrom-lchrom) + [1] * lchrom, lchrom*lchrom)
-	sga = SGA(popsize, lchrom, pmutation, pcross, objfunc, generate, flip_bit_nqueens, minimize)
+	generate = gen_queens
+	sga = SGA(popsize, lchrom, pmutation, pcross, objfunc, generate, flip_bit_nqueens, minimize, cross=crossover_nqueens)
 
 	print() # Add extra line for prettyness
 	#############################################################################################
@@ -112,7 +132,7 @@ if __name__ == '__main__':
 		if sga.best.fitness - lastfit == 0:
 			converge += 1
 			if converge == CONVERGENCE:
-				print("Convergence reached at generation {:d}".format(gen))
+				print("Convergence reached at generation {:d}".format(gen - CONVERGENCE))
 				break
 		else:
 			converge = 0
