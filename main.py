@@ -88,7 +88,7 @@ if __name__ == '__main__':
 	minimize  = (minimize[0].lower() == 'y') # Get minimize as boolean
 
 	# GLOBAL VARIABLES
-	MINRNG, MAXRNG = -5.00, 5.00 # Min and max for floating point numbers
+	MINRNG, MAXRNG = -5.12, 5.12 # Min and max for floating point numbers
 	NUM_DIGITS = 3 # How many significant digits for each value
 	PRECISION = NUM_DIGITS-1 # How many decimal places for floating points (must be <= NUM_DIGITS)
 	CONVERGENCE = 200 # If no improvement after so many generations, exit
@@ -99,11 +99,12 @@ if __name__ == '__main__':
 #	generate = lambda x: [random.choice( [-1, 1] ) for _ in range(x)] # lambda for selecting random chromosome
 #	sga = SGA(popsize, lchrom, pmutation, pcross, objfunc, generate, flip_bit_plus_minus, minimize)
 
-#	lchrom = 2
-#	objfunc = dejong
-#	generate = lambda x: [random.uniform( MINRNG, MAXRNG ) for _ in range(x)]
-#	sga = SGA(popsize, lchrom, pmutation, pcross, objfunc, generate, flip_bit_bcd, minimize)
+	lchrom = 30
+	objfunc = dejong
+	generate = lambda x: [random.uniform( MINRNG, MAXRNG ) for _ in range(x)]
+	sga = SGA(popsize, lchrom, pmutation, pcross, objfunc, generate, flip_bit_bcd, minimize)
 
+	'''
 	def gen_queens(n): # Function to generate n queens
 		queens = []
 		for i in range(n):
@@ -116,7 +117,7 @@ if __name__ == '__main__':
 	objfunc = nqueens
 	generate = gen_queens
 	sga = SGA(popsize, lchrom, pmutation, pcross, objfunc, generate, flip_bit_nqueens, minimize, cross=crossover_nqueens)
-
+	'''
 	print() # Add extra line for prettyness
 	#############################################################################################
 
@@ -127,12 +128,11 @@ if __name__ == '__main__':
 		sga.next_generation()
 		sga.update_statistics()
 		
-		# TODO: Add min, max, avg fitness to y vals
 		y.append(sga.best.fitness)
 		if sga.best.fitness - lastfit == 0:
 			converge += 1
 			if converge == CONVERGENCE:
-				print("Convergence reached at generation {:d}".format(gen - CONVERGENCE))
+				print("Convergence reached at generation {:d}".format(gen))
 				break
 		else:
 			converge = 0
