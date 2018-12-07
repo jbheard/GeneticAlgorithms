@@ -94,7 +94,8 @@ class SGA:
 		self.update_statistics()
 		return
 
-	# Select a random gene
+	# Select a random gene based on fitness
+	# Population must be sorted to work effectively
 	def select(self):
 		target = random.uniform(0, self.sumfit)
 		fitness = self.sumfit # For minimizing, take complement of each gene fitness
@@ -108,9 +109,13 @@ class SGA:
 			i += 1
 		return i
 
+	# Select the best gene from a random sample of the population
 	def tourn_select(self):
-		return max(random.sample(self.pop, TOURN_MAX), key=lambda g: g.fitness)
-
+		if self.minimize:
+			return min(random.sample(self.pop, TOURN_MAX), key=lambda g: g.fitness)
+		else:
+			return max(random.sample(self.pop, TOURN_MAX), key=lambda g: g.fitness)
+	
 	# Evolve the current generation
 	def next_generation(self):
 		newpop = []
