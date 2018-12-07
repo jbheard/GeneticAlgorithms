@@ -1,19 +1,3 @@
-'''
-def gen_queens(n): # Function to generate n queens
-	queens = []
-	for i in range(n):
-		t = [0] * n
-		t[random.randint(0, n-1)] = 1
-		queens += t
-	return queens
-
-lchrom = int(input("Enter # of queens: "))
-objfunc = nqueens
-generate = gen_queens
-sga = SGA(popsize, lchrom, pmutation, pcross, objfunc, generate, flip_bit_nqueens, minimize, cross=crossover_nqueens)
-'''
-
-
 # Count number of collisions for n queens
 def nqueens(x):
 	collisions = 0
