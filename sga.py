@@ -1,7 +1,7 @@
 import random
 from copy import deepcopy
 
-TOURN_MAX = 1
+TOURN_MAX = 3
 
 # Get a True value with certain probability, otherwise False
 # 0 <= probability <= 1
@@ -109,21 +109,7 @@ class SGA:
 		return i
 
 	def tourn_select(self):
-		bestind = random.randint(0, self.popsize - 1)
-		best = self.pop[bestind]
-		for i in range(TOURN_MAX):
-			x = random.randint(0, self.popsize - 1)
-			ind = self.pop[x]
-			
-			if self.minimize:
-				if ind.fitness < best.fitness:
-					best = ind
-					bestind = x
-			else:
-				if ind.fitness > best.fitness:
-					best = ind
-					bestind = x
-		return bestind
+		return max(random.sample(self.pop, TOURN_MAX), key=lambda g: g.fitness)
 
 	# Evolve the current generation
 	def next_generation(self):
@@ -134,13 +120,13 @@ class SGA:
 			gene2 = self.tourn_select()
 			
 			# Cossover our two selected genes
-			child1, child2 = self.crossover(self.pop[gene1], self.pop[gene2], self.pc)
+			child1, child2 = self.crossover(gene1, gene2, self.pc)
 
 			newpop.append(child1)
 			newpop.append(child2)
 		
 		# Maintain consistency for odd numbered populations
-		if len(newpop) < self.popsize: newpop += [ self.pop[self.tourn_select()] ]
+		if len(newpop) < self.popsize: newpop += [ self.tourn_select() ]
 		# Replace old population with new population
 		self.pop = newpop
 
