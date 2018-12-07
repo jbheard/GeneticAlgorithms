@@ -1,10 +1,7 @@
-'''
-TODO:
-	- Instead of just maxgen, add convergence check for optimal gene
-'''
-
 import random
 from copy import deepcopy
+
+TOURN_MAX = 1
 
 # Get a True value with certain probability, otherwise False
 # 0 <= probability <= 1
@@ -26,10 +23,9 @@ def crossover(parent1, parent2, pcross):
 	if flip(pcross) and len(child1.chrom) > 1:
 		chrom1, chrom2 = child1.chrom, child2.chrom
 		i = random.randint(1, len(chrom1)-1)
-		chrom1[:i], chrom2[i:] = chrom2[:i], chrom1[i:]
+		chrom1[:i], chrom2[:i] = chrom2[:i], chrom1[:i]
 
 	return child1, child2
-
 
 # Container class for chromosomes
 class Genotype:
@@ -41,11 +37,15 @@ class Genotype:
 	# For printing out gene values
 	def __str__(self):
 		ret = '{:.2f} | '.format(self.fitness)
-		for x in self.chrom:
+		for x in self.chrom[:-1]:
 			if type(x) is float: # Format floats to drop trailing 0s
-				ret += '{:.2f} '.format(x)
+				ret += '{:.3f},'.format(x)
 			else:
-				ret += '{} '.format(x)
+				ret += '{:2},'.format(x)
+		if type(x) is float: # Format floats to drop trailing 0s
+			ret += '{:.3f}'.format(x)
+		else:
+			ret += '{:2}'.format(x)
 		return ret
 
 	# evaluate and update fitness
@@ -81,11 +81,13 @@ class SGA:
 		
 		# sum and average of fitness for current population
 		self.sumfit = 0
+		self.minfit = 0
+		self.avgfit = 0
+		self.maxfit = 0
 		
 		# Generate the initial population
 		self.pop = [ Genotype(lchrom, generate) for _ in range(self.popsize) ]
-		for gene in self.pop:
-			gene.eval_fitness(obj_func)
+		for gene in self.pop: gene.eval_fitness(obj_func)
 		
 		# Select arbitrary best gene and update stats to start
 		self.best = self.pop[0]
@@ -107,14 +109,12 @@ class SGA:
 		return i
 
 	def tourn_select(self):
-		best = None
-		bestind = None
-		for i in range(0, 2):
+		bestind = random.randint(0, self.popsize - 1)
+		best = self.pop[bestind]
+		for i in range(TOURN_MAX):
 			x = random.randint(0, self.popsize - 1)
 			ind = self.pop[x]
-			if best == None:
-				best = ind
-				bestind = x
+			
 			if self.minimize:
 				if ind.fitness < best.fitness:
 					best = ind
@@ -140,23 +140,33 @@ class SGA:
 			newpop.append(child2)
 		
 		# Maintain consistency for odd numbered populations
-		if len(newpop) < self.popsize: newpop += [ self.pop[self.select()] ]
+		if len(newpop) < self.popsize: newpop += [ self.pop[self.tourn_select()] ]
+		# Replace old population with new population
 		self.pop = newpop
 
 		# Mutate all genes with probability pm
 		for i in range(self.popsize):
 			# Mutate the gene
-			self.mutate(self.pop[i], self.pm, self.flip_bit)
 			self.pop[i].eval_fitness(self.obj_func)
 
-		# Sort the genes in increasing order of fitness
-		self.pop.sort(key=lambda g: g.fitness)
+			# Calculate pmutate based on original pm value; higher chance to mutate worse genes
+#			pmutate = self.pm * ( (self.pop[i].fitness - self.minfit) / (self.maxfit - self.minfit) )
+#			if self.minimize:
+#				pmutate = 1.0 - pmutate
+			pmutate = self.pm
+			if self.mutate(self.pop[i], pmutate, self.flip_bit):
+				self.pop[i].eval_fitness(self.obj_func)
 		return
 
 	# Update information on the current generation
 	def update_statistics(self):
 		# Find total fitness, best gene for this generation
 		self.sumfit = sum(g.fitness for g in self.pop)
+		self.avgfit = self.sumfit / self.popsize
+		
+		self.maxfit = max(self.pop, key=lambda x: x.fitness).fitness
+		self.minfit = min(self.pop, key=lambda x: x.fitness).fitness
+		
 		if self.minimize: # Minimize best gene
 			self.best = min(self.pop + [self.best], key=lambda x: x.fitness) # Get best gene of generation
 		else: # Maximize best gene
