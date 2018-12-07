@@ -1,5 +1,8 @@
+MATPLOTLIB = True
+if MATPLOTLIB:
+	import matplotlib.pyplot as plt
+
 import random
-import matplotlib.pyplot as plt
 from copy import deepcopy
 
 from objfunc import *
@@ -80,31 +83,12 @@ def crossover_nqueens(p1, p2, pc):
 	return c1, c2
 
 if __name__ == '__main__':
-	maxgen    =   int(input("Enter maximum # of generations: "))
-	popsize   =   int(input("Enter population size ------- > "))
-	pcross    = float(input("Enter crossover probability - > "))
-	pmutation = float(input("Enter mutation probability -- > "))
-	minimize  =       input("Minimize? (Y/N) ------------- > ") # If user answers No, maximize instead
-	minimize  = (minimize[0].lower() == 'y') # Get minimize as boolean
-
 	# GLOBAL VARIABLES
-	MINRNG, MAXRNG = -5.12, 5.12 # Min and max for floating point numbers
-	NUM_DIGITS = 3 # How many significant digits for each value
-	PRECISION = NUM_DIGITS-1 # How many decimal places for floating points (must be <= NUM_DIGITS)
-	CONVERGENCE = 200 # If no improvement after so many generations, exit
+	CONVERGENCE = 250 # If no improvement after so many generations, exit
 
-	########################### MAIN CODE : RUN TEST CASES FROM HERE ############################
-#	lchrom = 27 # for objfuncXX, set lchrom = XX
-#	objfunc = objfunc27
-#	generate = lambda x: [random.choice( [-1, 1] ) for _ in range(x)] # lambda for selecting random chromosome
-#	sga = SGA(popsize, lchrom, pmutation, pcross, objfunc, generate, flip_bit_plus_minus, minimize)
-
-	lchrom = 30
-	objfunc = dejong
-	generate = lambda x: [random.uniform( MINRNG, MAXRNG ) for _ in range(x)]
-	sga = SGA(popsize, lchrom, pmutation, pcross, objfunc, generate, flip_bit_bcd, minimize)
-
-	'''
+	# Chromosome generator functions
+	gen_plus_minus_1 = lambda x: [random.choice( [-1, 1] ) for _ in range(x)]
+	gen_float = lambda x: [random.uniform( MINRNG, MAXRNG ) for _ in range(x)]
 	def gen_queens(n): # Function to generate n queens
 		queens = []
 		for i in range(n):
@@ -112,14 +96,62 @@ if __name__ == '__main__':
 			t[random.randint(0, n-1)] = 1
 			queens += t
 		return queens
+	
+	objfuncs = [
+		(dejong, -2, gen_float, flip_bit_bcd),
+		(rosenbrock, -2, gen_float, flip_bit_bcd),
+		(himmelblau, 2, gen_float, flip_bit_bcd),
+		
+		(objfunc10, 10, gen_plus_minus_1, flip_bit_plus_minus),
+		(objfunc15, 15, gen_plus_minus_1, flip_bit_plus_minus),
+		(objfunc20, 20, gen_plus_minus_1, flip_bit_plus_minus),
+		(objfunc25, 25, gen_plus_minus_1, flip_bit_plus_minus),
+		(objfunc27, 27, gen_plus_minus_1, flip_bit_plus_minus),
+		
+		(nqueens, -1, gen_queens, flip_bit_nqueens)
+	]
 
-	lchrom = int(input("Enter # of queens: "))
-	objfunc = nqueens
-	generate = gen_queens
-	sga = SGA(popsize, lchrom, pmutation, pcross, objfunc, generate, flip_bit_nqueens, minimize, cross=crossover_nqueens)
-	'''
-	print() # Add extra line for prettyness
-	#############################################################################################
+	####################### MAIN CODE : RUN TEST CASES FROM HERE ########################
+	for i in range(len(objfuncs)):
+		print("{:2d} : {:>15s}".format(i, objfuncs[i][0].__name__))
+	print()
+	of_choice =   int(input("Enter OF id from above        : "))
+
+	objfunc   = objfuncs[of_choice][0]
+	lchrom    = objfuncs[of_choice][1]
+	generate  = objfuncs[of_choice][2]
+	flip_bit  = objfuncs[of_choice][3]
+	
+	maxgen    =   int(input("Enter maximum # of generations: "))
+	popsize   =   int(input("Enter population size ------- > "))
+	pcross    = float(input("Enter crossover probability - > "))
+	pmutation = float(input("Enter mutation probability -- > "))
+	minimize  =       input("Minimize? (Y/N) ------------- > ") # If user answers No, maximize instead
+	minimize  = (minimize[0].lower() == 'y') # Get minimize as boolean
+	
+	if objfunc is dejong:
+		lchrom = int(input("Enter number of variables: "))
+		MINRNG, MAXRNG = -5.12, 5.12
+		NUM_DIGITS = 3
+		PRECISION = NUM_DIGITS-1
+	elif objfunc is rosenbrock:
+		lchrom = int(input("Enter number of variables: "))
+		MINRNG, MAXRNG = -2.048, 2.048
+		NUM_DIGITS = 4
+		PRECISION = NUM_DIGITS-1
+	elif objfunc is himmelblau:
+		MINRNG, MAXRNG = -5.00, 5.00 # No clearly defined range, so choose between -5 and +5
+		NUM_DIGITS = 4
+		PRECISION = NUM_DIGITS-1
+	
+	if lchrom == -1:
+		lchrom = int(input("Enter number of queens: "))
+		sga = SGA(popsize, lchrom, pmutation, pcross, objfunc, generate, flip_bit, minimize, cross=crossover_nqueens)
+	else:
+		sga = SGA(popsize, lchrom, pmutation, pcross, objfunc, generate, flip_bit, minimize)
+	
+	print()
+	#######################################################
 
 	# The main body of the SGA, evolve to next generation and update statistics until max no. of generations have been parsed
 	y = []
@@ -133,16 +165,26 @@ if __name__ == '__main__':
 			converge += 1
 			if converge == CONVERGENCE:
 				print("Convergence reached at generation {:d}".format(gen))
+				print("No improvement for {:d} generations".format(CONVERGENCE))
 				break
 		else:
 			converge = 0
 		lastfit = sga.best.fitness
-		
-	print("Best Gene:", str(sga.best))
 	
-	x = list(range(gen+1))
-	plt.plot(x, y, label='best')
-	plt.xlabel('Generation #')
-	plt.ylabel('Best, Avg Fitness')
-	plt.show()
-
+	if objfunc is nqueens:
+		print("Number of conflicts: {}".format(sga.best.fitness // 2))
+		board = sga.best.chrom
+		n = int(len(board)**0.5)
+		for i in range(n):
+			for j in range(n):
+				print(board[i*n+j], end=' ')
+			print()
+	else:
+		print("Best Gene:", str(sga.best))
+	
+	if MATPLOTLIB:
+		x = list(range(gen+1))
+		plt.plot(x, y, label='best')
+		plt.xlabel('Generation #')
+		plt.ylabel('Best Fitness')
+		plt.show()
